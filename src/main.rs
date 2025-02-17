@@ -1,19 +1,20 @@
+mod compiler;
+mod interpreter;
+
+use compiler::compile_expr;
+use interpreter::parse_expr;
+use sexp::parse;
 use std::env;
 use std::fs::File;
 use std::io::prelude::*;
 
-mod interpreter;
-
-use interpreter::{eval, Expr};
-
-/// Compile a source program into a string of x86-64 assembly
-fn compile(program: String) -> String {
-    let num = program.trim().parse::<i32>().unwrap();
-    return format!("mov rax, {}", num);
-}
-
 fn main() -> std::io::Result<()> {
     let args: Vec<String> = env::args().collect();
+
+    if args.len() != 3 {
+        eprintln!("Usage: {} <input-file> <output-file>", args[0]);
+        std::process::exit(1);
+    }
 
     let in_name = &args[1];
     let out_name = &args[2];
@@ -22,7 +23,9 @@ fn main() -> std::io::Result<()> {
     let mut in_contents = String::new();
     in_file.read_to_string(&mut in_contents)?;
 
-    let result = compile(in_contents);
+    // Run interpreter test
+    let expr = parse_expr(&parse(&in_contents).unwrap());
+    let result = compile_expr(&expr);
 
     let asm_program = format!(
         "
@@ -37,11 +40,6 @@ fn main() -> std::io::Result<()> {
 
     let mut out_file = File::create(out_name)?;
     out_file.write_all(asm_program.as_bytes())?;
-
-    // Run interpreter test
-    let expr = Expr::Add1(Box::new(Expr::Sub1(Box::new(Expr::Num(5)))));
-    let interpreter_result = eval(&expr);
-    println!("Interpreter Result: {}", interpreter_result);
 
     Ok(())
 }

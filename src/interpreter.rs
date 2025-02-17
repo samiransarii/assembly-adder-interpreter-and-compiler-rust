@@ -1,3 +1,6 @@
+use sexp::Atom::*;
+use sexp::*;
+
 // Define the expression type
 #[derive(Debug)]
 pub enum Expr {
@@ -7,13 +10,27 @@ pub enum Expr {
     Negate(Box<Expr>),
 }
 
-// Funtion to evaluate an expression
+// Funtion to evaluate an expression for an interpreter
 pub fn eval(e: &Expr) -> i32 {
     match e {
         Expr::Num(n) => *n,
         Expr::Add1(e1) => eval(e1) + 1,
         Expr::Sub1(e1) => eval(e1) - 1,
         Expr::Negate(e1) => -eval(e1),
+    }
+}
+
+// Function to parse S-Expressions into Expr
+pub fn parse_expr(s: &Sexp) -> Expr {
+    match s {
+        Sexp::Atom(I(n)) => Expr::Num(i32::try_from(*n).unwrap()),
+        Sexp::List(vec) => match &vec[..] {
+            [Sexp::Atom(S(op)), e] if op == "add1" => Expr::Add1(Box::new(parse_expr(e))),
+            [Sexp::Atom(S(op)), e] if op == "sub1" => Expr::Sub1(Box::new(parse_expr(e))),
+            [Sexp::Atom(S(op)), e] if op == "negate" => Expr::Negate(Box::new(parse_expr(e))),
+            _ => panic!("parse error"),
+        },
+        _ => panic!("parse error"),
     }
 }
 

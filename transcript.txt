@@ -1,0 +1,90 @@
+=== Running add ===
+(sub1 (sub1 (add1 73)))
+cargo run -- test/add.snek test/add.s
+nasm -f macho64 test/add.s -o runtime/our_code.o
+ar rcs runtime/libour_code.a runtime/our_code.o
+rustc --target x86_64-apple-darwin -L runtime/ -l static=our_code runtime/start.rs -o test/add.run
+cat test/add.s
+
+        section .text
+        global our_code_starts_here
+        our_code_starts_here:
+            mov rax, 73
+add rax, 1
+sub rax, 1
+sub rax, 1
+            ret
+        rm test/add.s
+72
+
+=== Running sub ===
+(sub1 (sub1 100))
+cargo run -- test/sub.snek test/sub.s
+nasm -f macho64 test/sub.s -o runtime/our_code.o
+ar rcs runtime/libour_code.a runtime/our_code.o
+rustc --target x86_64-apple-darwin -L runtime/ -l static=our_code runtime/start.rs -o test/sub.run
+cat test/sub.s
+
+        section .text
+        global our_code_starts_here
+        our_code_starts_here:
+            mov rax, 100
+sub rax, 1
+sub rax, 1
+            ret
+        rm test/sub.s
+98
+
+=== Running negate ===
+(negate (add1 5))
+cargo run -- test/negate.snek test/negate.s
+nasm -f macho64 test/negate.s -o runtime/our_code.o
+ar rcs runtime/libour_code.a runtime/our_code.o
+rustc --target x86_64-apple-darwin -L runtime/ -l static=our_code runtime/start.rs -o test/negate.run
+cat test/negate.s
+
+        section .text
+        global our_code_starts_here
+        our_code_starts_here:
+            mov rax, 5
+add rax, 1
+neg rax
+            ret
+        rm test/negate.s
+-6
+
+=== Running mixed ===
+(sub1 (negate (sub1 20)))
+cargo run -- test/mixed.snek test/mixed.s
+nasm -f macho64 test/mixed.s -o runtime/our_code.o
+ar rcs runtime/libour_code.a runtime/our_code.o
+rustc --target x86_64-apple-darwin -L runtime/ -l static=our_code runtime/start.rs -o test/mixed.run
+cat test/mixed.s
+
+        section .text
+        global our_code_starts_here
+        our_code_starts_here:
+            mov rax, 20
+sub rax, 1
+neg rax
+sub rax, 1
+            ret
+        rm test/mixed.s
+-20
+
+=== Running zero ===
+0
+cargo run -- test/zero.snek test/zero.s
+nasm -f macho64 test/zero.s -o runtime/our_code.o
+ar rcs runtime/libour_code.a runtime/our_code.o
+rustc --target x86_64-apple-darwin -L runtime/ -l static=our_code runtime/start.rs -o test/zero.run
+cat test/zero.s
+
+        section .text
+        global our_code_starts_here
+        our_code_starts_here:
+            mov rax, 0
+            ret
+        rm test/zero.s
+0
+
